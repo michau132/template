@@ -1,25 +1,25 @@
 import React from "react";
 import "./Home.css";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import {
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   Checkbox,
+  Button,
 } from "@mui/material";
-
-/*
-use redux to make
- */
+import { useSelector, useDispatch } from "react-redux";
+import { change_x, selectCount } from "./features/favourites";
 
 const baseURL = "https://api.spacexdata.com/v3/capsules";
 
 export const Home = () => {
+  const dispatch = useDispatch();
+  const count = useSelector(selectCount);
   const [post, setPost] = React.useState<Array<any> | null>(null);
   const [error, setError] = React.useState(null);
-  const [capsules, setCapsules] = React.useState<Array<any>>([]);
-  const [checked, setChecked] = React.useState<Array<number>>([]);
 
   React.useEffect(() => {
     axios
@@ -30,24 +30,10 @@ export const Home = () => {
       .catch((error) => {
         setError(error);
       });
-  }, [baseURL]);
-
-  const handleToggle = (value: number) => () => {
-    const currentIndex = checked.indexOf(value);
-    const newChecked = [...checked];
-
-    if (currentIndex === -1) {
-      newChecked.push(value);
-    } else {
-      newChecked.splice(currentIndex, 1);
-    }
-
-    setChecked(newChecked);
-  };
+  });
 
   if (error) return `Ups, something went wrong`;
   if (!post) {
-    setPost([]);
     return "Fetching data!";
   }
 
@@ -56,32 +42,33 @@ export const Home = () => {
       <header className="Home-header">
         <List>
           {post.map((capsule) => {
-            const labelId = `checkbox-list-secondary-label-${capsule.capsule_serial}`;
             return (
               <ListItem
                 key={capsule.capsule_id}
                 secondaryAction={
                   <Checkbox
                     edge="end"
-                    onChange={handleToggle(post?.indexOf(capsule))}
-                    checked={checked.indexOf(post?.indexOf(capsule)) !== -1}
-                    inputProps={{ "aria-labelledby": labelId }}
+                    onChange={() => dispatch(change_x(post?.indexOf(capsule)))}
+                    checked={count.indexOf(post?.indexOf(capsule)) !== -1}
                   />
                 }
                 disablePadding
               >
-                <ListItemButton onClick={}>
+                <ListItemButton>
                   <ListItemText
-                    id={labelId}
+                    id={capsule.capsule_serial}
                     primary={
                       " capsule: " +
                       capsule.capsule_id +
                       " status: " +
                       capsule.status +
-                      " desc: " +
+                      " details: " +
                       capsule.details
                     }
                   />
+                  <Link to={capsule.capsule_serial}>
+                    <Button>Show more</Button>
+                  </Link>
                 </ListItemButton>
               </ListItem>
             );
@@ -91,12 +78,3 @@ export const Home = () => {
     </div>
   );
 };
-/*
-            <li key={capsule.capsule_serial}>
-              {capsule.capsule_serial +
-                " " +
-                capsule.status +
-                " " +
-                capsule.details}
-            </li>
-*/
